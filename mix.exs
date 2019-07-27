@@ -1,4 +1,4 @@
-defmodule Themoviedb.MixProject do
+defmodule TheMovieDB.MixProject do
   use Mix.Project
 
   def project do

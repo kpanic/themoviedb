@@ -1,6 +1,4 @@
-# Themoviedb
-
-**TODO: Add description**
+# TheMovieDB
 
 ## Installation
 
