@@ -10,4 +10,8 @@ defmodule TheMovieDB do
   def search(title, :movie, _opts) do
     API.movie(title)
   end
+
+  def search(name, :person, _opts) do
+    API.person(name)
+  end
 end

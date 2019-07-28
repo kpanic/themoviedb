@@ -8,7 +8,7 @@ defmodule TheMovieDB.HTTP do
   def process_request_params(params) do
     Map.merge(
       params,
-        Map.merge(params, %{api_key: Application.fetch_env!(:themoviedb, :api_key)})
+      Map.merge(params, %{api_key: Application.fetch_env!(:themoviedb, :api_key)})
     )
   end
 end
