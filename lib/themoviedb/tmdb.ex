@@ -7,41 +7,38 @@ defmodule TheMovieDB.API do
   def movie(title) do
     query_params = URI.encode_query(%{query: title})
 
-    with %{body: body} <- HTTP.get!("#{@url}/search/movie?#{query_params}"),
-         {:ok, %{"results" => [first_match | _rest]}} <- Jason.decode(body) do
-      {:ok, Map.put(first_match, "public_url", "#{@public_url}/movie/#{first_match["id"]}")}
+    with {:ok, %{body: body}} <- HTTP.get("#{@url}/search/movie?#{query_params}"),
+         {:ok, %{"results" => results} = response} <- Jason.decode(body) do
+      results = Enum.map(results, &build_public_url(&1, :movie))
+      {:ok, Map.put(response, "results", results)}
     end
   end
 
   def recommendations(title) do
     query_params = URI.encode_query(%{query: title})
 
-    with %{body: body} <- HTTP.get!("#{@url}/search/movie?#{query_params}"),
-         {:ok, %{"results" => [first_match | _rest]}} <- Jason.decode(body),
+    with {:ok, %{body: body}} <- HTTP.get("#{@url}/search/movie?#{query_params}"),
+         {:ok, %{"results" => [first_match | _rest]} = response} <- Jason.decode(body),
          recommendations_url = "#{@url}/movie/#{first_match["id"]}/recommendations",
          {:ok, %{body: body}} <- HTTP.get(recommendations_url),
          {:ok, %{"results" => results}} <- Jason.decode(body) do
-      {:ok,
-       Enum.reduce(results, [], fn %{"original_title" => original_title, "id" => id}, acc ->
-         acc ++
-           [
-             %{}
-             |> Map.put("public_url", "#{@public_url}/movie/#{id}")
-             |> Map.put("original_title", original_title)
-           ]
-       end)}
+      results = Enum.map(results, &build_public_url(&1, :movie))
+
+      {:ok, Map.put(response, "results", results)}
     end
   end
 
   def person(name) do
     query_params = URI.encode_query(%{query: name})
 
-    with %{body: body} <- HTTP.get!("#{@url}/search/person?#{query_params}"),
-         {:ok, %{"results" => results}} <- Jason.decode(body) do
-      {:ok,
-       Enum.map(results, fn %{"id" => id} = result ->
-         Map.put(result, "public_url", "#{@public_url}/person/#{id}")
-       end)}
+    with {:ok, %{body: body}} <- HTTP.get("#{@url}/search/person?#{query_params}"),
+         {:ok, %{"results" => results} = response} <- Jason.decode(body) do
+      results = Enum.map(results, &build_public_url(&1, :person))
+      {:ok, Map.put(response, "results", results)}
     end
+  end
+
+  defp build_public_url(%{"id" => id} = result, type) do
+    Map.put(result, "public_url", "#{@public_url}/#{type}/#{id}")
   end
 end
